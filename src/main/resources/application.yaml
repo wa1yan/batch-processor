@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: batch-processor
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${keycloak-server}/realms/${keycloak-realm}/protocol/openid-connect/certs
+  datasource:
+    url: jdbc:mysql://localhost:3366/batch_processor_db
+    username: root
+    password: toor
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  batch:
+    jdbc:
+      initialize-schema: always
+
+server:
+  port: 8089
+
+
+keycloak-server: http://localhost:8080
+keycloak-realm: maybank-realm
