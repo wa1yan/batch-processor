@@ -1,2 +1,182 @@
-# batch-processor
-This repo is testing for batch processing with keycloak authentication
+# Batch Processing with Keycloak Authentication
+
+---
+This repository is testing for batch processing with keycloak authentication
+
+- We need to run mysql server and keycloak server first.
+- And then, create realm, client and user in keycloak.
+- Create database 'batch_processor_db' in mysql for project.
+- Update [your-realm-name] in application.yaml
+- And then, mvn clean install for spring boot project.
+
+Technology: Spring Boot, Spring Batch, Spring security with keycloak server, Spring Data Jpa, MySQL.
+Especially, JpaSpecification for data retrieving
+
+Greeting
+---
+No need to authenticate for greeting endpoint so we don't need any token. 
+````
+curl --location 'http://localhost:8089/api/v1/greet' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+````
+
+Generate Token
+---
+Note: You need to update your client_id and client_secret.
+````
+curl --location 'http://localhost:8080/realms/maybank-realm/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E' \
+--data-urlencode 'client_id=maybank-client' \
+--data-urlencode 'client_secret=Oinx6ZqwYh1BKsFkOu6DP22R188jY98Z' \
+--data-urlencode 'grant_type=client_credentials'
+````
+
+Note
+---
+The following endpoints are need to authenticate so we need to generate token first and then update Bearer token in authorization header.
+
+Data importing
+---
+````
+curl --location --request POST 'http://localhost:8089/api/v1/data/import' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjc3MDEsImlhdCI6MTcyNTM2NzQwMSwianRpIjoiMTczNGY3NWUtNmY3Yi00ZTdkLWIwOWEtOGFkMjE1ODM3NGE2IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.WODb4WzGN0yAtP544vgweOBfV5bWP-qUVfcFVzqMyBdlbpjOyuV4UKvLvuwaPuY0mB-7722xWEzO1YJQ14wPV7Yq0RblvSn9AAVxKrLvM0crGbomd2Y0XAGTagRrkoAUAui-bSKuoCpC7snhKcmLkI768rHxkgZB9uP8uJOsk5Yt8uuXE8kwrmbwlis_CNTWuGD1WchyInuuR5qZA3fpenUAXbhzHAXcguELP8xDqTtEJRTlpPH3zSWbS12aRXVhgqWpilLptVm0LApee_GuizBbgZ3f06zgSfHMqZvx78mH2FKQOueuNhXyESH6HxTM1xps06LIA8TqvuMeWNSY4A' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+````
+
+Search by criteria
+---
+SearchByCustomerId:
+````
+curl --location 'http://localhost:8089/api/v1/transactions?customerId=333&page=1&size=10' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjgwNzcsImlhdCI6MTcyNTM2Nzc3NywianRpIjoiYzA3N2M0ZWUtNmUyOS00YjA1LThhMWUtZmIzODk2YTgzNWYyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.Roxf6ebGaMzI4iXUj0gy4jKM0uO8HnBTDLZOb72v5w6Aow1J03sXU9xAmZNvRYBS57BMHlp5nmvah0ah6RvWrGIsgQX7Lshu8jg4RJezHZfa4Mw8DQgiOVd1T02HvOGUqds96XYBb4CyCfPNgJL3tFH4v0l5yuzNH24UacSipMir3WLcpsSY8Kaq19CCbyDhC6Gx1zZ4_LoV9viCc0rHX9c7TQHJy5gZqZs3cb1CtoI4fuQJQQ8wHt_aAl4DieEdQaOFHx8GpOWRIlg8BLRCIfZ3IZT7sFPtWuRSD3iNDW0mB6DdcW5NVk6Oym7QMi0KcqP5d8WeWL7vgmOn6DHe_g' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+Update description by id:
+````
+
+SearchByDescription:
+````
+curl --location 'http://localhost:8089/api/v1/transactions?description=fund%20transfer&page=0&size=10' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjgwNzcsImlhdCI6MTcyNTM2Nzc3NywianRpIjoiYzA3N2M0ZWUtNmUyOS00YjA1LThhMWUtZmIzODk2YTgzNWYyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.Roxf6ebGaMzI4iXUj0gy4jKM0uO8HnBTDLZOb72v5w6Aow1J03sXU9xAmZNvRYBS57BMHlp5nmvah0ah6RvWrGIsgQX7Lshu8jg4RJezHZfa4Mw8DQgiOVd1T02HvOGUqds96XYBb4CyCfPNgJL3tFH4v0l5yuzNH24UacSipMir3WLcpsSY8Kaq19CCbyDhC6Gx1zZ4_LoV9viCc0rHX9c7TQHJy5gZqZs3cb1CtoI4fuQJQQ8wHt_aAl4DieEdQaOFHx8GpOWRIlg8BLRCIfZ3IZT7sFPtWuRSD3iNDW0mB6DdcW5NVk6Oym7QMi0KcqP5d8WeWL7vgmOn6DHe_g' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+````
+
+SearchByAccountNumbers:
+````
+curl --location 'http://localhost:8089/api/v1/transactions?accountNumbers=8872838299%2C%206872838260&page=0&size=10' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjgwNzcsImlhdCI6MTcyNTM2Nzc3NywianRpIjoiYzA3N2M0ZWUtNmUyOS00YjA1LThhMWUtZmIzODk2YTgzNWYyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.Roxf6ebGaMzI4iXUj0gy4jKM0uO8HnBTDLZOb72v5w6Aow1J03sXU9xAmZNvRYBS57BMHlp5nmvah0ah6RvWrGIsgQX7Lshu8jg4RJezHZfa4Mw8DQgiOVd1T02HvOGUqds96XYBb4CyCfPNgJL3tFH4v0l5yuzNH24UacSipMir3WLcpsSY8Kaq19CCbyDhC6Gx1zZ4_LoV9viCc0rHX9c7TQHJy5gZqZs3cb1CtoI4fuQJQQ8wHt_aAl4DieEdQaOFHx8GpOWRIlg8BLRCIfZ3IZT7sFPtWuRSD3iNDW0mB6DdcW5NVk6Oym7QMi0KcqP5d8WeWL7vgmOn6DHe_g' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+````
+
+SearchByCustomerIdAndAccountNumbers:
+````
+curl --location 'http://localhost:8089/api/v1/transactions?customerId=333&accountNumbers=8872838299%2C%206872838260&page=0&size=10' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjgwNzcsImlhdCI6MTcyNTM2Nzc3NywianRpIjoiYzA3N2M0ZWUtNmUyOS00YjA1LThhMWUtZmIzODk2YTgzNWYyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.Roxf6ebGaMzI4iXUj0gy4jKM0uO8HnBTDLZOb72v5w6Aow1J03sXU9xAmZNvRYBS57BMHlp5nmvah0ah6RvWrGIsgQX7Lshu8jg4RJezHZfa4Mw8DQgiOVd1T02HvOGUqds96XYBb4CyCfPNgJL3tFH4v0l5yuzNH24UacSipMir3WLcpsSY8Kaq19CCbyDhC6Gx1zZ4_LoV9viCc0rHX9c7TQHJy5gZqZs3cb1CtoI4fuQJQQ8wHt_aAl4DieEdQaOFHx8GpOWRIlg8BLRCIfZ3IZT7sFPtWuRSD3iNDW0mB6DdcW5NVk6Oym7QMi0KcqP5d8WeWL7vgmOn6DHe_g' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+````
+
+SearchByCustomerIdAndDescriptionAndAccountNumbers:
+````
+curl --location 'http://localhost:8089/api/v1/transactions?customerId=333&description=FUND%20TRANSFER&accountNumbers=6872838260%2C8872838299&page=0&size=10' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjgwNzcsImlhdCI6MTcyNTM2Nzc3NywianRpIjoiYzA3N2M0ZWUtNmUyOS00YjA1LThhMWUtZmIzODk2YTgzNWYyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.Roxf6ebGaMzI4iXUj0gy4jKM0uO8HnBTDLZOb72v5w6Aow1J03sXU9xAmZNvRYBS57BMHlp5nmvah0ah6RvWrGIsgQX7Lshu8jg4RJezHZfa4Mw8DQgiOVd1T02HvOGUqds96XYBb4CyCfPNgJL3tFH4v0l5yuzNH24UacSipMir3WLcpsSY8Kaq19CCbyDhC6Gx1zZ4_LoV9viCc0rHX9c7TQHJy5gZqZs3cb1CtoI4fuQJQQ8wHt_aAl4DieEdQaOFHx8GpOWRIlg8BLRCIfZ3IZT7sFPtWuRSD3iNDW0mB6DdcW5NVk6Oym7QMi0KcqP5d8WeWL7vgmOn6DHe_g' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E'
+````
+
+Update
+---
+Update description by id:
+````
+curl --location --request PATCH 'http://localhost:8089/api/v1/transactions/1' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyTEsyNkl2MXBSYkFTMmtRMnB6RlJtMTdqREdjM1Fubks2bU5HWEFEdDBvIn0.eyJleHAiOjE3MjUzNjgwNzcsImlhdCI6MTcyNTM2Nzc3NywianRpIjoiYzA3N2M0ZWUtNmUyOS00YjA1LThhMWUtZmIzODk2YTgzNWYyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9tYXliYW5rLXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjM0MTQ1NDA1LWQyNzktNDIzYy05M2U2LWRhZDllMDc1NTZhOSIsInR5cCI6IkJlYXJlciIsImF6cCI6Im1heWJhbmstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1heWJhbmstcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SWQiOiJtYXliYW5rLWNsaWVudCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjE3Mi4yNi4wLjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbWF5YmFuay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI2LjAuMSJ9.Roxf6ebGaMzI4iXUj0gy4jKM0uO8HnBTDLZOb72v5w6Aow1J03sXU9xAmZNvRYBS57BMHlp5nmvah0ah6RvWrGIsgQX7Lshu8jg4RJezHZfa4Mw8DQgiOVd1T02HvOGUqds96XYBb4CyCfPNgJL3tFH4v0l5yuzNH24UacSipMir3WLcpsSY8Kaq19CCbyDhC6Gx1zZ4_LoV9viCc0rHX9c7TQHJy5gZqZs3cb1CtoI4fuQJQQ8wHt_aAl4DieEdQaOFHx8GpOWRIlg8BLRCIfZ3IZT7sFPtWuRSD3iNDW0mB6DdcW5NVk6Oym7QMi0KcqP5d8WeWL7vgmOn6DHe_g' \
+--header 'Cookie: JSESSIONID=8DC2A381D30C9228F412D7B1FF85EF7E' \
+--data '{
+"description" : "updated description"
+}'
+````
+
+Guide
+---
+Run mysql and keycloak server in docker
+
+Create docker-compose.yaml
+````````
+version: '3.8'
+services:
+  mysql-kc:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - 3366:3306
+    restart: unless-stopped
+    environment:
+      MYSQL_USER: mregg
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: keycloak_db
+      MYSQL_ROOT_PASSWORD: toor
+    volumes:
+      - mysql-volume:/var/lib/mysqld
+    networks:
+      - spring-boot-keycloak-network 
+
+  keycloak-w:
+    image: quay.io/keycloak/keycloak:21.0.0
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_USER=mregg
+      - KEYCLOAK_PASSWORD=password
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=password
+      - DB_VENDOR=mysql
+      - DB_ADDR=mysql-kc
+      - DB_PORT=3306
+      - DB_USER=mregg
+      - DB_PASSWORD=password
+      - DB_DATABASE=keycloak_db
+      - PROXY_ADDRESS_FORWARDING=true
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    depends_on:
+      - mysql-kc
+    volumes:
+      - keycloak-volume:/opt/jboss/keycloak/standalone/data
+    networks:
+      - spring-boot-keycloak-network
+    command: start-dev
+
+networks:
+  spring-boot-keycloak-network:
+    external: true
+
+volumes:
+  mysql-volume:
+  keycloak-volume:
+````````
+And then run the command 
+````
+    $ docker-compose up -d
+````
+
+---
+Create database in mysql server
+```dockerfile
+    $ docker exec -it mysql bash
+    # mysql -u root -p
+    [type password]
+    # create database batch_processor_db
+    
+```
+---
+Create Keycloak Realm, Client and User.
+
+Go to keycloak server. http://localhost:8080/ and type user and password from docker-compose.yaml.
+username: admin
+password: password
+
+- create realm
+- create client (enable client authentication, enable direct access grants, enable service accounts roles and add url "http://localhost:8089/*" for valid redirect URIs)
+- create user and set password
+
+
+
