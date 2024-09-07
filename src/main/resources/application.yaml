@@ -4,6 +4,10 @@ spring:
   security:
     oauth2:
       resourceserver:
+#        opaquetoken:
+#          introspection-uri: ${keycloak-server}/realms/${keycloak-realm}/protocol/openid-connect/token/introspect
+#          client-id: maybank-client
+#          client-secret: Oinx6ZqwYh1BKsFkOu6DP22R188jY98Z
         jwt:
           jwk-set-uri: ${keycloak-server}/realms/${keycloak-realm}/protocol/openid-connect/certs
   datasource:
@@ -30,3 +34,9 @@ server:
 
 keycloak-server: http://localhost:8080
 keycloak-realm: maybank-realm
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
